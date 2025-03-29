@@ -76,15 +76,33 @@ end)
 
 
 local function StartDuelCountdown(opponentId)
-    local count = 5
+    local count = 10
     isDueling = true
     opponent = opponentId
     
+    local container = DatabindingAddDataContainerFromPath("", "MPCountdown")
+    local dataString = DatabindingAddDataString(container, "Timer", count)
+    local dataBoolean = DatabindingAddDataBool(container, "showTimer", true)
+    
     Citizen.CreateThread(function()
-        while count > 0 do
-            ShowNotification('Duel starting in ' .. count .. '...', 'NICE', 1000)
+        for i = count, 1, -1 do
+            DatabindingWriteDataString(dataString, tostring(i))
             Citizen.Wait(1000)
-            count = count - 1
+        end
+        
+        -- Cleanup UI elements
+        if UiStateMachineExists(190275865) then
+            UiStateMachineDestroy(190275865)
+        end
+        if DatabindingIsEntryValid(dataString) then
+            DatabindingRemoveDataEntry(dataString)
+        end
+        if DatabindingIsEntryValid(dataBoolean) then
+            DatabindingWriteDataBool(dataBoolean, false)
+            DatabindingRemoveDataEntry(dataBoolean)
+        end
+        if DatabindingIsEntryValid(container) then
+            DatabindingRemoveDataEntry(container)
         end
         
         ShowNotification('The duel has begun!', 'success', 3000)
